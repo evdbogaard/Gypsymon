@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GM.Discord.Bot": {
+      "commandName": "Project",
+      "commandLineArgs": "dev"
+    }
+  }
+}
