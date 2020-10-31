@@ -1,4 +1,7 @@
-﻿using GM.Discord.Bot.Models;
+﻿using Discord.Commands;
+using Discord.WebSocket;
+using GM.Discord.Bot.Integration;
+using GM.Discord.Bot.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -26,7 +29,10 @@ namespace GM.Discord.Bot
 
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(Configuration)
-                .AddTransient<Bot>()
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton<CommandService>()
+                .AddSingleton<Bot>()
+                .AddSingleton<SetupService>()
                 .BuildServiceProvider();
 
             serviceProvider.GetService<Bot>().MainAsync().Wait();
