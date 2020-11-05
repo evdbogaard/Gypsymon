@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using GM.Discord.Bot.Interfaces2;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Reflection;
@@ -14,15 +15,17 @@ namespace GM.Discord.Bot
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly IServiceProvider _services;
+        private readonly IRepository _repository;
         private readonly string _discordToken;
 
-        public Bot(DiscordSocketClient client, CommandService commands, IConfigurationRoot configuration, IServiceProvider services)
+        public Bot(DiscordSocketClient client, CommandService commands, IConfigurationRoot configuration, IServiceProvider services, IRepository repository)
         {
             // It is recommended to Dispose of a client when you are finished
             // using it, at the end of your app's lifetime.
             _client = client;
             _commands = commands;
             _services = services;
+            _repository = repository;
 
             _client.Log += LogAsync;
             _client.Ready += ReadyAsync;
@@ -55,6 +58,12 @@ namespace GM.Discord.Bot
         private Task ReadyAsync()
         {
             Console.WriteLine($"{_client.CurrentUser} is connected!");
+
+            _repository.GetAll().ForEach(settings =>
+            {
+                var chnl = _client.GetChannel(settings.SpawnChannelId) as ITextChannel;
+                chnl.SendMessageAsync("Hello world");
+            });
 
             return Task.CompletedTask;
         }

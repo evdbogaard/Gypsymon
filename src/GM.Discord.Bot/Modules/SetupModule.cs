@@ -20,7 +20,7 @@ namespace GM.Discord.Bot.Modules
         [Command("spawn")]
         public async Task Spawn()
         {
-            _setupService.SpawnChannelId = Context.Channel.Id;
+            _setupService.SetSpawnChannel(Context.Guild.Id, Context.Channel.Id);
             await ReplyAsync($"Spawning set to channel {Context.Channel.Name}.");
         }
     }
