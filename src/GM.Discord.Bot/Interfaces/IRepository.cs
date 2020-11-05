@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace GM.Discord.Bot.Interfaces2
+namespace GM.Discord.Bot.Interfaces
 {
     public interface IRepository
     {

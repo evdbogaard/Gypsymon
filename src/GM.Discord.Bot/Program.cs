@@ -1,7 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using GM.Discord.Bot.Integration;
-using GM.Discord.Bot.Interfaces2;
+using GM.Discord.Bot.Interfaces;
 using GM.Discord.Bot.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

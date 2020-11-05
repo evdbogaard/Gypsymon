@@ -1,4 +1,4 @@
-﻿using GM.Discord.Bot.Interfaces2;
+﻿using GM.Discord.Bot.Interfaces;
 using GM.Discord.Bot.Models;
 using System;
 using System.Collections.Generic;
