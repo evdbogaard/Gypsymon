@@ -1,8 +1,10 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
+using GM.Discord.Bot.DbStuff;
 using GM.Discord.Bot.Integration;
 using GM.Discord.Bot.Interfaces;
 using GM.Discord.Bot.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -29,12 +31,14 @@ namespace GM.Discord.Bot
             Configuration = builder.Build();
 
             var serviceProvider = new ServiceCollection()
+                .AddDbContext<GypsyContext>(options =>
+                    options.UseNpgsql(Configuration.GetConnectionString("GypsyDb")))
                 .AddSingleton(Configuration)
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<Bot>()
                 .AddSingleton<SetupService>()
-                .AddTransient<IRepository, JsonRepository>()
+                .AddTransient<IRepository, DbRepository>()
                 .BuildServiceProvider();
 
             serviceProvider.GetService<Bot>().MainAsync().Wait();
