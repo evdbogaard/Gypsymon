@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace GM.Discord.Bot.DbStuff
+namespace GM.Discord.Bot.Db
 {
     public class GypsyContextFactory : IDesignTimeDbContextFactory<GypsyContext>
     {

@@ -1,6 +1,6 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
-using GM.Discord.Bot.DbStuff;
+using GM.Discord.Bot.Db;
 using GM.Discord.Bot.Integration;
 using GM.Discord.Bot.Interfaces;
 using GM.Discord.Bot.Models;

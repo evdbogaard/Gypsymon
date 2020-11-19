@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GM.Discord.Bot.Models
+namespace GM.Discord.Bot.Entities
 {
-    public class ServerSettingsModel
+    public class ServerSettings
     {
         public int Id { get; set; }
         public ulong ServerId { get; set; }

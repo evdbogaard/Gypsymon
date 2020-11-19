@@ -1,10 +1,8 @@
-﻿using GM.Discord.Bot.DbStuff;
+﻿using GM.Discord.Bot.Db;
+using GM.Discord.Bot.Entities;
 using GM.Discord.Bot.Interfaces;
-using GM.Discord.Bot.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GM.Discord.Bot.Integration
@@ -18,7 +16,7 @@ namespace GM.Discord.Bot.Integration
             _gypsyContext = gypsyContext;
         }
 
-        public async Task Create(ServerSettingsModel model)
+        public async Task Create(ServerSettings model)
         {
             await _gypsyContext.ServerSettings.AddAsync(model);
             await _gypsyContext.SaveChangesAsync();
@@ -31,15 +29,15 @@ namespace GM.Discord.Bot.Integration
             await _gypsyContext.SaveChangesAsync();
         }
 
-        public async Task<List<ServerSettingsModel>> GetAll() =>
+        public async Task<List<ServerSettings>> GetAll() =>
             await _gypsyContext.ServerSettings
                  .ToListAsync();
 
-        public async Task<ServerSettingsModel> GetById(ulong id) =>
+        public async Task<ServerSettings> GetById(ulong id) =>
             await _gypsyContext.ServerSettings
                 .FirstOrDefaultAsync(m => m.ServerId == id);
 
-        public async Task Update(ulong id, ServerSettingsModel model)
+        public async Task Update(ulong id, ServerSettings model)
         {
             var entity = await _gypsyContext.ServerSettings
                 .FirstAsync(m => m.ServerId == id);

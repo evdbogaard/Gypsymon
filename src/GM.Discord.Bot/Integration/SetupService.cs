@@ -1,10 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using GM.Discord.Bot.Entities;
 using GM.Discord.Bot.Interfaces;
-using GM.Discord.Bot.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GM.Discord.Bot.Integration
@@ -33,12 +30,12 @@ namespace GM.Discord.Bot.Integration
             return _client.GetChannel(serverSettings.SpawnChannelId) as ITextChannel;
         }
 
-        private async Task<ServerSettingsModel> GetOrCreateServerSettings(ulong serverId)
+        private async Task<ServerSettings> GetOrCreateServerSettings(ulong serverId)
         {
             var settings = await _repository.GetById(serverId);
             if (settings == null)
             {
-                settings = new ServerSettingsModel()
+                settings = new ServerSettings()
                 {
                     ServerId = serverId
                 };
