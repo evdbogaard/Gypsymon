@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using GM.Discord.Bot.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,10 @@ namespace GM.Discord.Bot
         private readonly IServiceProvider _services;
         private readonly IRepository _repository;
         private readonly string _discordToken;
+        private readonly int _spawnRate;
+        private readonly string _prefix;
+
+        private Dictionary<ulong, int> spawnTracker = new Dictionary<ulong, int>();
 
         public Bot(DiscordSocketClient client, CommandService commands, IConfigurationRoot configuration, IServiceProvider services, IRepository repository)
         {
@@ -32,6 +37,8 @@ namespace GM.Discord.Bot
             _client.MessageReceived += HandleCommandAsync;
 
             _discordToken = configuration["discordToken"];
+            _spawnRate = configuration.GetValue<int>("SpawnRate");
+            _prefix = configuration.GetValue<string>("Prefix");
         }
 
         public async Task MainAsync()
@@ -62,7 +69,19 @@ namespace GM.Discord.Bot
             _repository.GetAll().Result.ForEach(settings =>
             {
                 var chnl = _client.GetChannel(settings.SpawnChannelId) as ITextChannel;
-                chnl.SendMessageAsync("Hello world");
+                //chnl.SendMessageAsync("Hello world");
+
+                //var fileName = "tux-turtle.jpg";
+                //var embed = new EmbedBuilder()
+                //{
+                //    Title = "Hellow world",
+                //    Color = Color.Green,
+                //    Description = "I'm an embedded message",
+                //    ImageUrl = $"attachment://{fileName}"
+                //}.Build();
+
+                ////chnl.SendMessageAsync(embed: embed);
+                //chnl.SendFileAsync(fileName, embed: embed);
             });
 
             return Task.CompletedTask;
@@ -78,10 +97,33 @@ namespace GM.Discord.Bot
             int argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix('!', ref argPos) ||
+            if (!(message.HasStringPrefix(_prefix, ref argPos) ||
                 message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
                 message.Author.IsBot || message.Author.IsWebhook)
+            {
+                if (spawnTracker.ContainsKey(message.Channel.Id))
+                {
+                    if (++spawnTracker[message.Channel.Id] >= _spawnRate)
+                    {
+                        var fileName = "tux-turtle.jpg";
+                        var embed = new EmbedBuilder()
+                        {
+                            Title = "A random gypsy entered the room.",
+                            Color = Color.Green,
+                            Description = "There's nothing you can do about",
+                            ImageUrl = $"attachment://{fileName}"
+                        }.Build();
+
+                        await message.Channel.SendFileAsync(fileName, embed: embed);
+
+                        spawnTracker[message.Channel.Id] = 0;
+                    }
+                }
+                else
+                    spawnTracker.Add(message.Channel.Id, 1);
+
                 return;
+            }
 
             // Create a WebSocket-based command context based on the message
             var context = new SocketCommandContext(_client, message);
