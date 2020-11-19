@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace GM.Discord.Bot.Integration
 {
@@ -13,49 +14,49 @@ namespace GM.Discord.Bot.Integration
     {
         private string _fileName = "asdf.json";
 
-        public void Create(ServerSettingsModel model)
+        public async Task Create(ServerSettingsModel model)
         {
-            var models = Read();
+            var models = await Read();
             if (models.Where(m => m.ServerId == model.ServerId).ToList().Count == 0)
             {
                 models.Add(model);
-                Write(models);
+                await Write(models);
             }
         }
 
-        public void Delete(ulong id) =>
-            Write(Read().Where(m => m.ServerId != id).ToList());
+        public async Task Delete(ulong id) =>
+            await Write((await Read()).Where(m => m.ServerId != id).ToList());
 
-        public List<ServerSettingsModel> GetAll() =>
-            Read();
+        public async Task<List<ServerSettingsModel>> GetAll() =>
+            await Read();
 
-        public ServerSettingsModel GetById(ulong id) =>
-            Read().FirstOrDefault(m => m.ServerId == id);
+        public async Task<ServerSettingsModel> GetById(ulong id) =>
+            (await Read()).FirstOrDefault(m => m.ServerId == id);
 
-        public void Update(ulong id, ServerSettingsModel model)
+        public async Task Update(ulong id, ServerSettingsModel model)
         {
-            var models = Read();
+            var models = await Read();
 
             var index = models.FindIndex(m => m.ServerId == id);
             models[index] = model;
             
-            Write(models);
+            await Write(models);
         }
 
-        private List<ServerSettingsModel> Read()
+        private async Task<List<ServerSettingsModel>> Read()
         {
             if (System.IO.File.Exists(_fileName))
             {
-                var contents = System.IO.File.ReadAllText(_fileName);
+                var contents = await System.IO.File.ReadAllTextAsync(_fileName);
                 return JsonSerializer.Deserialize<List<ServerSettingsModel>>(contents);
             }
             return new List<ServerSettingsModel>();
         }
 
-        private void Write(List<ServerSettingsModel> models)
+        private async Task Write(List<ServerSettingsModel> models)
         {
             var jsonString = JsonSerializer.Serialize(models);
-            System.IO.File.WriteAllText(_fileName, jsonString);
+            await System.IO.File.WriteAllTextAsync(_fileName, jsonString);
         }
     }
 }

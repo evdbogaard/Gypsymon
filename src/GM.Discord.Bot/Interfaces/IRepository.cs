@@ -2,16 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GM.Discord.Bot.Interfaces
 {
     public interface IRepository
     {
-        void Create(ServerSettingsModel model);
-        void Update(ulong id, ServerSettingsModel model);
-        void Delete(ulong id);
+        Task Create(ServerSettingsModel model);
+        Task Update(ulong id, ServerSettingsModel model);
+        Task Delete(ulong id);
 
-        ServerSettingsModel GetById(ulong id);
-        List<ServerSettingsModel> GetAll();
+        Task<ServerSettingsModel> GetById(ulong id);
+        Task<List<ServerSettingsModel>> GetAll();
     }
 }

@@ -5,6 +5,7 @@ using GM.Discord.Bot.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GM.Discord.Bot.Integration
 {
@@ -19,29 +20,29 @@ namespace GM.Discord.Bot.Integration
             _client = client;
         }
 
-        public void SetSpawnChannel(ulong serverId, ulong channelId)
+        public async Task SetSpawnChannel(ulong serverId, ulong channelId)
         {
-            var serverSettings = GetOrCreateServerSettings(serverId);
+            var serverSettings = await GetOrCreateServerSettings(serverId);
             serverSettings.SpawnChannelId = channelId;
-            _repository.Update(serverId, serverSettings);
+            await _repository.Update(serverId, serverSettings);
         }
 
-        public ITextChannel GetSpawnChannel(ulong serverId)
+        public async Task<ITextChannel> GetSpawnChannel(ulong serverId)
         {
-            var serverSettings = GetOrCreateServerSettings(serverId);
+            var serverSettings = await GetOrCreateServerSettings(serverId);
             return _client.GetChannel(serverSettings.SpawnChannelId) as ITextChannel;
         }
 
-        private ServerSettingsModel GetOrCreateServerSettings(ulong serverId)
+        private async Task<ServerSettingsModel> GetOrCreateServerSettings(ulong serverId)
         {
-            var settings = _repository.GetById(serverId);
+            var settings = await _repository.GetById(serverId);
             if (settings == null)
             {
                 settings = new ServerSettingsModel()
                 {
                     ServerId = serverId
                 };
-                _repository.Create(settings);
+                await _repository.Create(settings);
             }
             return settings;
         }

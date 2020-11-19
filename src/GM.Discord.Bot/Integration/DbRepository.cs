@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GM.Discord.Bot.Integration
 {
@@ -17,38 +18,34 @@ namespace GM.Discord.Bot.Integration
             _gypsyContext = gypsyContext;
         }
 
-        public void Create(ServerSettingsModel model)
+        public async Task Create(ServerSettingsModel model)
         {
-            _gypsyContext.ServerSettings.Add(model);
-            _gypsyContext.SaveChanges();
+            await _gypsyContext.ServerSettings.AddAsync(model);
+            await _gypsyContext.SaveChangesAsync();
         }
 
-        public void Delete(ulong id)
+        public async Task Delete(ulong id)
         {
-            var model = _gypsyContext.ServerSettings.First(m => m.ServerId == id);
+            var model = await _gypsyContext.ServerSettings.FirstAsync(m => m.ServerId == id);
             _gypsyContext.ServerSettings.Remove(model);
-            _gypsyContext.SaveChanges();
+            await _gypsyContext.SaveChangesAsync();
         }
 
-        public List<ServerSettingsModel> GetAll()
-        {
-            return _gypsyContext.ServerSettings
-                 .ToList();
-        }
+        public async Task<List<ServerSettingsModel>> GetAll() =>
+            await _gypsyContext.ServerSettings
+                 .ToListAsync();
 
-        public ServerSettingsModel GetById(ulong id)
-        {
-            return _gypsyContext.ServerSettings
-                .FirstOrDefault(m => m.ServerId == id);
-        }
+        public async Task<ServerSettingsModel> GetById(ulong id) =>
+            await _gypsyContext.ServerSettings
+                .FirstOrDefaultAsync(m => m.ServerId == id);
 
-        public void Update(ulong id, ServerSettingsModel model)
+        public async Task Update(ulong id, ServerSettingsModel model)
         {
-            var entity = _gypsyContext.ServerSettings
-                .First(m => m.ServerId == id);
+            var entity = await _gypsyContext.ServerSettings
+                .FirstAsync(m => m.ServerId == id);
             entity = model;
             _gypsyContext.Update(entity);
-            _gypsyContext.SaveChanges();
+            await _gypsyContext.SaveChangesAsync();
         }
     }
 }
