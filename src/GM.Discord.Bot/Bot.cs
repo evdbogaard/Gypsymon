@@ -59,7 +59,7 @@ namespace GM.Discord.Bot
         {
             Console.WriteLine($"{_client.CurrentUser} is connected!");
 
-            _repository.GetAll().ForEach(settings =>
+            _repository.GetAll().Result.ForEach(settings =>
             {
                 var chnl = _client.GetChannel(settings.SpawnChannelId) as ITextChannel;
                 chnl.SendMessageAsync("Hello world");
