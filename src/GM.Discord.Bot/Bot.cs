@@ -1,7 +1,12 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using GM.Discord.Bot.Db;
+using GM.Discord.Bot.Entities;
+using GM.Discord.Bot.Extensions;
+using GM.Discord.Bot.Integration;
 using GM.Discord.Bot.Interfaces;
+using GM.Discord.Bot.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -17,13 +22,16 @@ namespace GM.Discord.Bot
         private readonly CommandService _commands;
         private readonly IServiceProvider _services;
         private readonly IRepository _repository;
+        private readonly GypsyContext _dbContext;
         private readonly string _discordToken;
         private readonly int _spawnRate;
         private readonly string _prefix;
 
         private Dictionary<ulong, int> spawnTracker = new Dictionary<ulong, int>();
+        private List<GypsyModel> _gypsyModels;
 
-        public Bot(DiscordSocketClient client, CommandService commands, IConfigurationRoot configuration, IServiceProvider services, IRepository repository)
+        public Bot(DiscordSocketClient client, CommandService commands, IConfigurationRoot configuration, IServiceProvider services, IRepository repository,
+            JsonRepository<GypsyModel> gypsyRepository, GypsyContext dbContext)
         {
             // It is recommended to Dispose of a client when you are finished
             // using it, at the end of your app's lifetime.
@@ -31,7 +39,7 @@ namespace GM.Discord.Bot
             _commands = commands;
             _services = services;
             _repository = repository;
-
+            _dbContext = dbContext;
             _client.Log += LogAsync;
             _client.Ready += ReadyAsync;
             _client.MessageReceived += HandleCommandAsync;
@@ -39,6 +47,8 @@ namespace GM.Discord.Bot
             _discordToken = configuration["discordToken"];
             _spawnRate = configuration.GetValue<int>("SpawnRate");
             _prefix = configuration.GetValue<string>("Prefix");
+
+            _gypsyModels = gypsyRepository.GetAll().Result;
         }
 
         public async Task MainAsync()
@@ -105,16 +115,31 @@ namespace GM.Discord.Bot
                 {
                     if (++spawnTracker[message.Channel.Id] >= _spawnRate)
                     {
-                        var fileName = "tux-turtle.jpg";
+                        var gypsy = _gypsyModels.GetRandom();
+
+                        var fileName = gypsy.Image; // "tux-turtle.jpg";
                         var embed = new EmbedBuilder()
                         {
                             Title = "A random gypsy entered the room.",
                             Color = Color.Green,
                             Description = "There's nothing you can do about",
-                            ImageUrl = $"attachment://{fileName}"
+                            ImageUrl = $"attachment://random.jpg"
                         }.Build();
 
-                        await message.Channel.SendFileAsync(fileName, embed: embed);
+                        var stream = System.IO.File.OpenRead(gypsy.Image);
+
+                        var spawn = new Spawn
+                        {
+                            Id = 0,
+                            Name = gypsy.Name,
+                            AlternativeNames = gypsy.AlternativeNames,
+                            Caught = false,
+                            ServerId = message.Channel.Id
+                        };
+                        _dbContext.Add(spawn);
+                        await _dbContext.SaveChangesAsync();
+
+                        await message.Channel.SendFileAsync(stream, "random.jpg", embed: embed);
 
                         spawnTracker[message.Channel.Id] = 0;
                     }
