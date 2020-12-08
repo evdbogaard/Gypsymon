@@ -40,6 +40,7 @@ namespace GM.Discord.Bot
                 .AddSingleton<SetupService>()
                 .AddTransient<IRepository, DbRepository>()
                 .AddTransient<JsonRepository<GypsyModel>>()
+                .AddScoped<GypsyService>()
                 .BuildServiceProvider();
 
             serviceProvider.GetService<Bot>().MainAsync().Wait();

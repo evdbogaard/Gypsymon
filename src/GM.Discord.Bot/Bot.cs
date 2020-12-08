@@ -23,6 +23,7 @@ namespace GM.Discord.Bot
         private readonly IServiceProvider _services;
         private readonly IRepository _repository;
         private readonly GypsyContext _dbContext;
+        private readonly GypsyService _gypsyService;
         private readonly string _discordToken;
         private readonly int _spawnRate;
         private readonly string _prefix;
@@ -31,7 +32,7 @@ namespace GM.Discord.Bot
         private List<GypsyModel> _gypsyModels;
 
         public Bot(DiscordSocketClient client, CommandService commands, IConfigurationRoot configuration, IServiceProvider services, IRepository repository,
-            JsonRepository<GypsyModel> gypsyRepository, GypsyContext dbContext)
+            JsonRepository<GypsyModel> gypsyRepository, GypsyContext dbContext, GypsyService gypsyService)
         {
             // It is recommended to Dispose of a client when you are finished
             // using it, at the end of your app's lifetime.
@@ -40,6 +41,7 @@ namespace GM.Discord.Bot
             _services = services;
             _repository = repository;
             _dbContext = dbContext;
+            _gypsyService = gypsyService;
             _client.Log += LogAsync;
             _client.Ready += ReadyAsync;
             _client.MessageReceived += HandleCommandAsync;
@@ -106,52 +108,36 @@ namespace GM.Discord.Bot
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
 
+            if (message.Author.IsBot || message.Author.IsWebhook)
+                return;
+
+            // Create a WebSocket-based command context based on the message
+            var context = new SocketCommandContext(_client, message);
+
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
             if (!(message.HasStringPrefix(_prefix, ref argPos) ||
-                message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot || message.Author.IsWebhook)
+                message.HasMentionPrefix(_client.CurrentUser, ref argPos)))
             {
-                if (spawnTracker.ContainsKey(message.Channel.Id))
+                var serverId = context.Guild?.Id;
+                if (!serverId.HasValue)
+                    return;
+
+                if (spawnTracker.ContainsKey(serverId.Value))
                 {
-                    if (++spawnTracker[message.Channel.Id] >= _spawnRate)
+                    if (++spawnTracker[serverId.Value] >= _spawnRate)
                     {
-                        var gypsy = _gypsyModels.GetRandom();
+                        await _gypsyService.CreateSpawn(serverId.Value, _prefix);
 
-                        var fileName = gypsy.Image; // "tux-turtle.jpg";
-                        var embed = new EmbedBuilder()
-                        {
-                            Title = "A random gypsy entered the room.",
-                            Color = Color.Green,
-                            Description = "There's nothing you can do about",
-                            ImageUrl = $"attachment://random.jpg"
-                        }.Build();
-
-                        var stream = System.IO.File.OpenRead(gypsy.Image);
-
-                        var spawn = new Spawn
-                        {
-                            Id = 0,
-                            Name = gypsy.Name,
-                            AlternativeNames = gypsy.AlternativeNames,
-                            Caught = false,
-                            ServerId = message.Channel.Id
-                        };
-                        _dbContext.Add(spawn);
-                        await _dbContext.SaveChangesAsync();
-
-                        await message.Channel.SendFileAsync(stream, "random.jpg", embed: embed);
-
-                        spawnTracker[message.Channel.Id] = 0;
+                        spawnTracker[serverId.Value] = 0;
                     }
                 }
                 else
-                    spawnTracker.Add(message.Channel.Id, 1);
+                    spawnTracker.Add(serverId.Value, 1);
 
                 return;
             }
 
-            // Create a WebSocket-based command context based on the message
-            var context = new SocketCommandContext(_client, message);
+
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.

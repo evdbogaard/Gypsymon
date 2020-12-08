@@ -3,15 +3,17 @@ using System;
 using GM.Discord.Bot.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace GM.Discord.Bot.Migrations
 {
     [DbContext(typeof(GypsyContext))]
-    partial class GypsyContextModelSnapshot : ModelSnapshot
+    [Migration("20201203200124_SpawnPrimaryKey")]
+    partial class SpawnPrimaryKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,9 +41,10 @@ namespace GM.Discord.Bot.Migrations
 
             modelBuilder.Entity("GM.Discord.Bot.Entities.Spawn", b =>
                 {
-                    b.Property<decimal>("ServerId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string[]>("AlternativeNames")
                         .HasColumnType("text[]");
@@ -52,7 +55,10 @@ namespace GM.Discord.Bot.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
-                    b.HasKey("ServerId");
+                    b.Property<decimal>("ServerId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
 
                     b.ToTable("Spawns");
                 });
