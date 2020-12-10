@@ -20,10 +20,26 @@ namespace GM.Discord.Bot.Modules
 		[Command("catch")]
 		public async Task Catch(string name)
 		{
-			if (await _gypsyService.TryCatch(Context.Guild.Id, Context.Channel.Id, name))
+			if (await _gypsyService.TryCatch(Context.Guild.Id, Context.Channel.Id, name, Context.User.Id))
 				await ReplyAsync("Hurray, you caught it!!!");
 			else
 				await ReplyAsync("What are you doing?");
+		}
+
+		[RequireContext(ContextType.Guild)]
+		[Command("join")]
+		public async Task Join()
+		{
+			if (await _gypsyService.Join(Context.User.Id))
+				await ReplyAsync($"{Context.User.Mention} has joined!");
+			else
+				await ReplyAsync("No...just no!");
+		}
+
+		[Command("list")]
+		public async Task List()
+		{
+			await ReplyAsync(await _gypsyService.List(Context.User.Id));
 		}
 	}
 }

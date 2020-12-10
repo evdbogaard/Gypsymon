@@ -4,6 +4,7 @@ using GM.Discord.Bot.Db;
 using GM.Discord.Bot.Entities;
 using GM.Discord.Bot.Extensions;
 using GM.Discord.Bot.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +47,7 @@ namespace GM.Discord.Bot.Integration
             await _dbContext.AddOrUpdateEntity(spawn);
             await _dbContext.SaveChangesAsync();
 
-            var serverSettings = await _dbContext.ServerSettings.FirstOrDefaultAsync(s => s.ServerId == serverId);
+            var serverSettings = await _dbContext.ServerSettings.AsQueryable().FirstOrDefaultAsync(s => s.ServerId == serverId);
             if (serverSettings == null || serverSettings.SpawnChannelId == 0)
                 return;
 
@@ -54,15 +55,19 @@ namespace GM.Discord.Bot.Integration
             await spawnChannel.SendFileAsync(stream, "random.jpg", embed: embed);
         }
 
-        public async Task<bool> TryCatch(ulong serverId, ulong channelId, string guess)
+        public async Task<bool> TryCatch(ulong serverId, ulong channelId, string guess, ulong userId)
         {
             // Check correct channel
-            var serverSettings = await _dbContext.ServerSettings.FirstOrDefaultAsync(s => s.ServerId == serverId && s.SpawnChannelId == channelId);
+            var serverSettings = await _dbContext.ServerSettings.AsQueryable().FirstOrDefaultAsync(s => s.ServerId == serverId && s.SpawnChannelId == channelId);
             if (serverSettings == null)
                 return false;
 
+            var user = await _dbContext.Users.AsQueryable().FirstOrDefaultAsync(u => u.DiscordId == userId);
+            if (user == null)
+                return false;
+
             // Check active spawn
-            var spawn = await _dbContext.Spawns.FirstOrDefaultAsync(s => s.ServerId == serverId);
+            var spawn = await _dbContext.Spawns.AsQueryable().FirstOrDefaultAsync(s => s.ServerId == serverId);
             if (spawn == null || spawn.Caught)
                 return false;
 
@@ -76,11 +81,52 @@ namespace GM.Discord.Bot.Integration
             {
                 spawn.Caught = true;
                 _dbContext.Update(spawn);
+
+                var gypsymon = new Gypsymon
+                {
+                    Id = 0,
+                    Name = spawn.Name,
+                    UserId = user.Id,
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+                await _dbContext.AddAsync(gypsymon);
+
                 await _dbContext.SaveChangesAsync();
                 return true;
             }
 
             return false;
+        }
+
+        public async Task<bool> Join(ulong userId)
+        {
+            var exists = await _dbContext.Users.AsQueryable().FirstOrDefaultAsync(u => u.DiscordId == userId);
+            if (exists != null)
+                return false;
+
+            var user = new User
+            {
+                Id = 0,
+                DiscordId = userId,
+                CreatedAt = DateTimeOffset.UtcNow,
+                Balance = 0
+            };
+
+            await _dbContext.AddAsync(user);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<string> List(ulong userId)
+        {
+            var user = await _dbContext.Users
+                .Include(u => u.Gypsymons)
+                .FirstOrDefaultAsync(u => u.DiscordId == userId);
+            if (user == null)
+                return "User has no active account";
+
+            var names = user.Gypsymons.Select(g => g.Name).ToArray();
+            return string.Join(", ", names);
         }
     }
 }
